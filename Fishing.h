@@ -5,11 +5,14 @@
 #define BAIT_COUNT 4
 #define GEAR_SLOTS 4
 #define LOC_COUNT 3
+#define HELP_PAGES 5
+#define MENU_LINES 16
 
 class idPlayer;
+class idUserInterface;
 
 typedef struct {
-	const char* name;	
+	const char* name;
 	int minG, maxG;		// size range in grams
 	float strength;		// 1..10
 	int value;			// base sell value
@@ -17,6 +20,13 @@ typedef struct {
 	int favBait;		// bait index that attracts it
 	int loc;			// location index
 } fishInfo_t;
+
+typedef struct {
+	const char* name;
+	int price;			// cost to buy
+	float biteMult;		// multiplier for bite chance
+	float rareMult;		// multiplier for hook window
+} baitInfo_t;
 
 typedef struct {
 	int money, pending, heldCount;
@@ -28,16 +38,19 @@ typedef struct {
 	int best[FISH_COUNT];
 } fishSave_t;
 
-class rvFishing {
+class yoFishing {
 public:
 	enum { FS_IDLE, FS_WAIT, FS_BITE, FS_REEL };
+	enum { MENU_NONE, MENU_HELP, MENU_SHOP, MENU_TRAVEL, MENU_TROPHY };
 
-	rvFishing() { Cancel(); loaded = false; }
+	yoFishing() { hudGui = NULL; menuGui = NULL; loaded = false; msgUntil = 0; Cancel(); }
 
-	void Cancel();
-	bool TryCast(idPlayer* p);
-	void Think(idPlayer* p);
-	void Command(idPlayer* p, const idCmdArgs &args);
+	void Cancel();						// reset minigame state
+	bool TryCast(idPlayer* p);			// called by the weapon's Fire state
+	void Think(idPlayer* p);			// called by the weapon every frame
+	void Draw(idPlayer* p);				// called by the weapon every frame
+	void Command(idPlayer* p, const idCmdArgs& args);
+
 private:
 	void Load();
 	void Save();
@@ -46,16 +59,39 @@ private:
 	int PickFish();
 	float GearBonus(int slot);
 	void Catch(idPlayer* p);
-	void Lose(idPlayer* p, const char *why);
+	void Lose(idPlayer* p, const char* why);
+
+	//UI
+	void LoadGuis();
+	void UpdateUI(idPlayer* p);
+	void OpenMenu(int type);
+	void RefreshMenu();
+	void Pick(idPlayer* p, int n);
+	void Put(int line, const char* text);
+	void BuildHelp();
+	void BuildShop();
+	void BuildTravel();
+	void BuildTrophy();
+
+	void BuyBait(idPlayer* p, int n);
+	void BuyGear(idPlayer* p, int n);
+	void SellAll(idPlayer* p);
+	void CycleBait(idPlayer* p);
+	void Travel(idPlayer* p, int n);
+	void Status();
 
 	int state, nextCastTime, biteTime, hookEnd, nextSurge, nextHud;
 	int fishIdx;
 	bool wasDown, loaded;
 	float dist, tension, surge;
 	fishSave_t sv;
+
+	idUserInterface* hudGui, * menuGui;
+	int menuType, helpPage, lastImpulseSeq, msgUntil;
+	idStr lastMsg;
 };
 
-extern rvFishing fishing;
+extern yoFishing fishing;
 void Cmd_Fish_f(const idCmdArgs& args);
 
 #endif
