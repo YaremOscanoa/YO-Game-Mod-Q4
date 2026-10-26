@@ -50,6 +50,7 @@ public:
 
 	void Cancel();						// reset minigame state
 	bool TryCast(idPlayer* p);			// called by the weapon's Fire state
+	bool WeaponBusy();					// returns true if the weapon is busy with fishing
 	void Think(idPlayer* p);			// called by the weapon every frame
 	void Draw(idPlayer* p);				// called by the weapon every frame
 	void Command(idPlayer* p, const idCmdArgs& args);
@@ -65,6 +66,7 @@ private:
 	void Lose(idPlayer* p, const char* why);
 
 	//UI
+	void CheckLevelChange();
 	void LoadGuis();
 	void SetMenuText(const char* key, const char* text);
 	void UpdateUI(idPlayer* p);
@@ -84,6 +86,7 @@ private:
 	void Travel(idPlayer* p, int n);
 	void Status();
 
+	int holdUntil, castTime;
 	int state, nextCastTime, biteTime, hookEnd, nextSurge, nextHud;
 	int fishIdx;
 	bool wasDown, loaded;
@@ -91,7 +94,7 @@ private:
 	fishSave_t sv;
 
 	idUserInterface* hudGui, * menuGui;
-	int menuType, helpPage, lastImpulseSeq, msgUntil;
+	int menuType, helpPage, lastImpulseSeq, msgUntil, lastTime;
 	idStr lastMsg;
 };
 

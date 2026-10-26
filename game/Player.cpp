@@ -7,6 +7,7 @@
 #pragma hdrstop
 
 #include "Game_local.h"
+#include "/git/mod-newfiles/YO-Game-Mod-Q4/Fishing.h"
 
 #include "ai/AI.h"
 #include "ai/AI_Manager.h"
@@ -3617,6 +3618,10 @@ idPlayer::DrawHUD
 ===============
 */
 void idPlayer::DrawHUD( idUserInterface *_hud ) {
+
+	// Fishing mod modification: Draw the fishing HUD if the player is fishing
+	fishing.Draw(this);
+
 	idUserInterface * cursor = idPlayer::cursor;
  
 	if ( !gameLocal.GetLocalPlayer() ) {

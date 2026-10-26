@@ -3,6 +3,8 @@
 #pragma hdrstop
 
 #include "../Game_local.h"
+#include "/git/mod-newfiles/YO-Game-Mod-Q4/Fishing.h"
+
 // RAVEN BEGIN
 #include "../ai/AI.h"
 #if !defined(__GAME_PROJECTILE_H__)
@@ -26,7 +28,7 @@
 // RAVEN END
 
 #ifdef _WIN32
-#include "TypeInfo.h"
+#include "TypeInfo"
 #else
 #include "NoGameTypeInfo.h"
 #endif
@@ -171,7 +173,7 @@ void Cmd_ListSpawnArgs_f( const idCmdArgs &args ) {
 
 	for ( i = 0; i < ent->spawnArgs.GetNumKeyVals(); i++ ) {
 		const idKeyValue *kv = ent->spawnArgs.GetKeyVal( i );
-		gameLocal.Printf( "\"%s\"  "S_COLOR_WHITE"\"%s\"\n", kv->GetKey().c_str(), kv->GetValue().c_str() );
+		gameLocal.Printf( "\"%s\"  " S_COLOR_WHITE "\"%s\"\n", kv->GetKey().c_str(), kv->GetValue().c_str() );
 	}
 }
 
@@ -3223,6 +3225,10 @@ void idGameLocal::InitConsoleCommands( void ) {
 	cmdSystem->AddCommand( "setPMCVars",			Cmd_SetPMCVars_f,			CMD_FL_GAME,				"Resets player movement cvars" );
 
 	cmdSystem->AddCommand( "testClientModel",		Cmd_TestClientModel_f,		CMD_FL_GAME,				"" );
+
+// Fishing mod Additions
+	cmdSystem->AddCommand( "fish",					Cmd_Fish_f,					CMD_FL_GAME,				"fishing mod commands");
+
 #ifndef _FINAL
 	cmdSystem->AddCommand( "clientOverflowReliable", Cmd_ClientOverflowReliable_f, CMD_FL_GAME,				"" );
 #endif

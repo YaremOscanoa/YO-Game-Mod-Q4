@@ -146,6 +146,9 @@ void yoFishing::Cancel() {
 	menuType = MENU_NONE;
 	helpPage = 0;
 	lastImpulseSeq = -1;
+	lastTime = 0;
+	holdUntil = 0;
+	castTime = 0;
 }
 
 void yoFishing::Notice(idPlayer* p, const char* msg) {
@@ -207,12 +210,22 @@ int yoFishing::PickFish() {
 
 /* ===================== MINIGAME ===================== */
 
+// The weapon's Fire state waits on this so Fire <-> Idle can never loop within one frame.
+bool yoFishing::WeaponBusy() {
+	return gameLocal.time < holdUntil;
+}
+
 bool yoFishing::TryCast(idPlayer* p) {
 	Load();
+	holdUntil = gameLocal.time + 150;               // every Fire press keeps the weapon in Fire for 150 ms
 
 	if (menuType != MENU_NONE) return false;      // clicking inside a menu must not cast
 
-	if (state == FS_WAIT) { Lose(p, "You reeled in empty line."); return false; }
+	if (state == FS_WAIT) {
+		if (gameLocal.time < castTime + 700) return false;   // still holding the button from the cast
+		Lose(p, "You reeled in empty line.");
+		return false;
+	}
 	if (state == FS_BITE) {                       // pressed fire in time: hook!
 		state = FS_REEL;
 		dist = 100.0f; tension = 20.0f; surge = 0.5f; nextSurge = 0;
@@ -235,11 +248,23 @@ bool yoFishing::TryCast(idPlayer* p) {
 	delay /= (baitTable[sv.curBait].biteMult * GearBonus(3));
 	biteTime = gameLocal.time + SEC2MS(delay);
 	state = FS_WAIT;
+	castTime = gameLocal.time;
 	Notice(p, va("Cast with %s. Waiting for a bite...", baitTable[sv.curBait].name));
 	return true;                                    // weapon plays its fire animation
 }
 
+// Safety net: game time restarts from zero on a new map, so a drop in time means the level
+// was reloaded. We then reset our state, which also drops stale GUI pointers.
+// (This makes calling Cancel() from the weapon's Init optional.)
+void yoFishing::CheckLevelChange() {
+	if (gameLocal.time < lastTime) {
+		Cancel();
+	}
+	lastTime = gameLocal.time;
+}
+
 void yoFishing::Think(idPlayer* p) {
+	CheckLevelChange();
 	Load();
 	UpdateUI(p);
 
@@ -481,6 +506,7 @@ void yoFishing::BuildTrophy() {
 /* ===================== HUD + MENU DRAWING ===================== */
 
 void yoFishing::Draw(idPlayer* p) {
+	CheckLevelChange();
 	Load();
 	LoadGuis();
 
