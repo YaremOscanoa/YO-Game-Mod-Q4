@@ -1,3 +1,6 @@
+#include "idlib/CmdArgs.h"
+#include <cstddef>
+#include "idlib/Str.h"
 #ifndef __FISHING_H__
 #define __FISHING_H__
 
@@ -63,6 +66,7 @@ private:
 
 	//UI
 	void LoadGuis();
+	void SetMenuText(const char* key, const char* text);
 	void UpdateUI(idPlayer* p);
 	void OpenMenu(int type);
 	void RefreshMenu();

@@ -149,6 +149,7 @@ public:
 	signed char impulse;						// impulse command
 	byte		flags;							// additional flags
 	int			sequence;						// just for debugging
+	int			impulseSequence;				// impulse sequence
 
 public:
 	void		ByteSwap();						// on big endian systems, byte swap the shorts and ints
