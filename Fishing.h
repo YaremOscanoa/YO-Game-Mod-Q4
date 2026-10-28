@@ -54,6 +54,7 @@ public:
 	void Think(idPlayer* p);			// called by the weapon every frame
 	void Draw(idPlayer* p);				// called by the weapon every frame
 	void Command(idPlayer* p, const idCmdArgs& args);
+	bool MenuOpen() const { return menuType != MENU_NONE; }
 
 private:
 	void Load();
@@ -71,6 +72,7 @@ private:
 	void SetMenuText(const char* key, const char* text);
 	void UpdateUI(idPlayer* p);
 	void OpenMenu(int type);
+
 	void RefreshMenu();
 	void Pick(idPlayer* p, int n);
 	void Put(int line, const char* text);

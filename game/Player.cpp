@@ -8436,7 +8436,10 @@ idPlayer::PerformImpulse
 ==============
 */
 void idPlayer::PerformImpulse( int impulse ) {
-
+// Fishing mod:while a menu is open the number keys belong to the menu, so they must not switch weapons. Mouse-wheel weapon cycling is blocked too.	
+	if ((impulse >= IMPULSE_0 && impulse <= IMPULSE_12) || impulse == IMPULSE_14 || impulse == IMPULSE_15) {
+		return;
+	}
 //RAVEN BEGIN
 // nrausch: Don't send xenon dpad impulses over the network
 #ifdef _XENON
@@ -8460,10 +8463,10 @@ void idPlayer::PerformImpulse( int impulse ) {
 		ClientSendEvent( EVENT_IMPULSE, &msg );
 	}
 
-	if ( impulse >= IMPULSE_0 && impulse <= IMPULSE_12 ) {
-		SelectWeapon( impulse, false );
-		return;
-	}
+	//if ( impulse >= IMPULSE_0 && impulse <= IMPULSE_12 ) {
+	//	SelectWeapon( impulse, false );
+	//	return;
+	//}
 
 //RAVEN BEGIN
 //asalmon: D-pad events for in game guis on Xenon

@@ -43,7 +43,7 @@ static const float gearBonus[3] = { 1.0f, 1.25f, 1.5f };
 static const char *locName[LOC_COUNT] = { "Pond", "River", "DeepLake" };
 static const int locCost[LOC_COUNT] = { 0, 200, 600 };
 
-static const char* helpTitle[HELP_PAGES] = {"Controls", "How to fish", "Gear and shop", "Travel and trophies" };
+static const char* helpTitle[HELP_PAGES] = {"Controls", "How to fish", "Fish and bait", "Gear and shop", "Travel and trophies" };
 
 static const char* helpText[HELP_PAGES][10] = {
 	{ "Fire (left mouse) .... cast / hook the fish / reel",
@@ -51,8 +51,8 @@ static const char* helpText[HELP_PAGES][10] = {
 	  "F2 .... shop (buy bait and gear, sell fish)",
 	  "F3 .... travel guide",
 	  "F4 .... trophy room",
-	  "Number keys .... choose an option inside a menu",
-	  "Press the same F key again to close a menu",
+	  "Number keys .... choose an option inside the menu",
+	  "Press the same F key again to close the menu",
 	  "Console: 'fish status' prints all your stats", NULL },
 
 	{ "1. Aim at the floor in front of you (it is your water).",
@@ -156,9 +156,6 @@ void yoFishing::Notice(idPlayer* p, const char* msg) {
 	msgUntil = gameLocal.time + 4000;
 	gameLocal.Printf("[Fishing] %s\n", msg);
 
-	// Stock HUD notice (verify these names in guis/hud.gui and Player.cpp;
-	// if 'hud' is not accessible, add a small public accessor to idPlayer, or delete this block:
-	// our own HUD already shows the message).
 	if (p && p->hud) {
 		p->hud->SetStateString("main_notice_text", msg);
 		p->hud->HandleNamedEvent("main_notice");
@@ -210,7 +207,6 @@ int yoFishing::PickFish() {
 
 /* ===================== MINIGAME ===================== */
 
-// The weapon's Fire state waits on this so Fire <-> Idle can never loop within one frame.
 bool yoFishing::WeaponBusy() {
 	return gameLocal.time < holdUntil;
 }
@@ -253,9 +249,6 @@ bool yoFishing::TryCast(idPlayer* p) {
 	return true;                                    // weapon plays its fire animation
 }
 
-// Safety net: game time restarts from zero on a new map, so a drop in time means the level
-// was reloaded. We then reset our state, which also drops stale GUI pointers.
-// (This makes calling Cancel() from the weapon's Init optional.)
 void yoFishing::CheckLevelChange() {
 	if (gameLocal.time < lastTime) {
 		Cancel();
@@ -304,7 +297,6 @@ void yoFishing::Think(idPlayer* p) {
 		if (tension > limit) { Lose(p, "SNAP! The line broke."); }
 		else if (dist >= 100.0f) { Lose(p, "The fish escaped."); }
 		else if (dist <= 0.0f) { Catch(p); }
-		// (the live tension/progress readout is now drawn by our HUD in Draw())
 	}
 	wasDown = down;
 }
@@ -381,7 +373,6 @@ void yoFishing::RefreshMenu() {
 	}
 }
 
-// Called every frame from Think(): first-run help and number-key menu input.
 void yoFishing::UpdateUI(idPlayer* p) {
 	if (!sv.helpSeen) {
 		sv.helpSeen = 1;
@@ -390,7 +381,7 @@ void yoFishing::UpdateUI(idPlayer* p) {
 	}
 
 	int seq = p->usercmd.impulseSequence;
-	if (lastImpulseSeq == -1) {      // first frame after a level load: ignore stale impulse
+	if (lastImpulseSeq == -1) {
 		lastImpulseSeq = seq;
 		return;
 	}
@@ -436,10 +427,10 @@ void yoFishing::BuildHelp() {
 
 void yoFishing::BuildShop() {
 	SetMenuText("title", "FISHING SHOP");
-	Put(0, va("Money: $%d      Unsold fish: %d (worth $%d)", sv.money, sv.heldCount, sv.pending));
+	Put(0, va("Money: $%d	Unsold fish: %d (worth $%d)", sv.money, sv.heldCount, sv.pending));
 
 	for (int i = 1; i < BAIT_COUNT; i++) {
-		Put(1 + i, va("%d   Buy 5 %s for $%d      (you have %d)", i, baitTable[i].name, baitTable[i].price * 5, sv.bait[i]));
+		Put(1 + i, va("%d   Buy 5 %s for $%d	(you have %d)", i, baitTable[i].name, baitTable[i].price * 5, sv.bait[i]));
 	}
 	for (int g = 0; g < GEAR_SLOTS; g++) {
 		idStr cost;
@@ -512,15 +503,15 @@ void yoFishing::Draw(idPlayer* p) {
 
 	if (hudGui) {
 		idStr baitStr = sv.curBait ? va("%d", sv.bait[sv.curBait]) : "inf";
-		hudGui->SetStateString("money", va("Money: $%d     Unsold fish: %d ($%d)", sv.money, sv.heldCount, sv.pending));
-		hudGui->SetStateString("bait", va("Bait: %s (%s)     Location: %s", baitTable[sv.curBait].name, baitStr.c_str(), locName[sv.loc]));
-		hudGui->SetStateString("gear", va("Rod L%d   Line L%d   Reel L%d   Hook L%d", sv.gear[0], sv.gear[1], sv.gear[2], sv.gear[3]));
+		hudGui->SetStateString("money", va(" Money: $%d		Unsold fish: %d ($%d) ", sv.money, sv.heldCount, sv.pending) );
+		hudGui->SetStateString("bait", va(" Bait: %s (%s)		Location: %s ", baitTable[sv.curBait].name, baitStr.c_str(), locName[sv.loc]) );
+		hudGui->SetStateString("gear", va(" Rod L%d		Line L%d		Reel L%d		Hook L%d ", sv.gear[0], sv.gear[1], sv.gear[2], sv.gear[3]) );
 
-		const char* st = "Aim at the floor and press Fire to cast";
+		const char* st = " Aim at the floor and press Fire to cast ";
 		switch (state) {
-		case FS_WAIT: st = "Waiting for a bite...";                      break;
-		case FS_BITE: st = "BITE!   PRESS FIRE NOW!";                    break;
-		case FS_REEL: st = va("Hooked: %s", fishTable[fishIdx].name);  break;
+		case FS_WAIT: st = " Waiting for a bite... ";                      break;
+		case FS_BITE: st = " BITE!	PRESS FIRE NOW! ";                    break;
+		case FS_REEL: st = va(" Hooked: %s", fishTable[fishIdx].name );  break;
 		}
 		hudGui->SetStateString("status", st);
 
@@ -583,7 +574,6 @@ void yoFishing::CycleBait(idPlayer* p) {
 	Notice(p, va("Using %s.", baitTable[sv.curBait].name));
 }
 
-// One-map version: "travelling" only changes the fish pool. No map is loaded.
 void yoFishing::Travel(idPlayer* p, int n) {
 	if (n < 0 || n >= LOC_COUNT) { return; }
 	if (!(sv.unlocked & (1 << n))) {
@@ -636,6 +626,13 @@ void yoFishing::Command(idPlayer* p, const idCmdArgs& args) {
 		Save();
 		Notice(p, va("Using %s.", baitTable[n].name));
 	}
+	else if (!cmd.Icmp("money")) {                  // demo helper: fish money [amount]
+		int amt = (args.Argc() > 2) ? n : 100000;
+		sv.money += amt;
+		Save();
+		Notice(p, va("Added $%d. You now have $%d.", amt, sv.money));
+		RefreshMenu();
+	}
 	else if (!cmd.Icmp("reset")) {
 		loaded = true;
 		memset(&sv, 0, sizeof(sv));
@@ -645,7 +642,7 @@ void yoFishing::Command(idPlayer* p, const idCmdArgs& args) {
 		Notice(p, "Fishing data reset.");
 	}
 	else {
-		gameLocal.Printf("fish help | shop | travel [N] | trophy | status | buy bait N | buy gear N | sell | bait N | reset\n");
+		gameLocal.Printf("fish help | shop | travel [N] | trophy | status | buy bait N | buy gear N | sell | bait N | money [N] | reset\n");
 	}
 }
 
